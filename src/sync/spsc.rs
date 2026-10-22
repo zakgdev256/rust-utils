@@ -79,13 +79,24 @@ pub struct RendezvousReceiver<T: Send> {
     inner: Arc<RendezvousInner<T>>
 }
 
+#[derive(Debug)]
+pub struct RecvError;
+
+impl std::fmt::Display for RecvError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "sender hung up")
+    }
+}
+
+impl std::error::Error for RecvError { }
+
 impl<T: Send> RendezvousReceiver<T> {
-    pub fn recv(&self) -> Result<T, ()> {
+    pub fn recv(&self) -> Result<T, RecvError> {
         let mut state = self.inner.data.lock().unwrap();
 
         while state.val.is_none() {
-            if !state.sender_alive { return Err(()) }
-            state = self.inner.receiver_cond.wait(state).map_err(|_| ())? 
+            if !state.sender_alive { return Err(RecvError) }
+            state = self.inner.receiver_cond.wait(state).map_err(|_| RecvError)? 
         }
 
         let val = state.val.take().unwrap();
