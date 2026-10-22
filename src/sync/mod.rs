@@ -1,3 +1,5 @@
+pub mod spsc;
+
 use std::marker::PhantomData;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
